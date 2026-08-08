@@ -342,12 +342,14 @@ textarea { resize: vertical; min-height: 64px; font-family: inherit; }
   color: var(--brand-dark);
 }
 .items-table .pos-cell { color: var(--ink-soft); font-variant-numeric: tabular-nums; padding-top: 10px; width: 42px; }
-.items-table .qty-cell input, .items-table .price-cell input { text-align: right; }
+.items-table .qty-cell input, .items-table .price-cell input, .items-table .discount-cell input { text-align: right; }
 .items-table .total-cell { text-align: right; font-variant-numeric: tabular-nums; padding-top: 10px; white-space: nowrap; }
 .items-table .actions-cell { width: 78px; white-space: nowrap; }
 .items-table .unit-cell select { min-width: 68px; }
 
-.items-toolbar { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.items-toolbar { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.bulk-discount { display: flex; align-items: center; gap: 6px; margin-left: auto; font-size: 13px; color: var(--ink-soft); }
+.bulk-discount input { width: 64px; }
 
 .totals-box {
   margin-top: 16px;

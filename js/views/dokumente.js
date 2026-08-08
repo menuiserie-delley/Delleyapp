@@ -177,7 +177,7 @@ export async function renderDocumentDetail(stage, id) {
       <div class="card-body">
         <table class="items-table" id="items-table">
           <thead>
-            <tr><th style="width:42px">${T.colPos}</th><th>${T.colBeschreibung}</th><th style="width:70px">${T.colAnzahl}</th><th style="width:80px">${T.colEinheit}</th><th style="width:110px">${T.colPreisEinh}</th><th style="width:100px">${T.colTotal2}</th><th style="width:78px"></th></tr>
+            <tr><th style="width:42px">${T.colPos}</th><th>${T.colBeschreibung}</th><th style="width:70px">${T.colAnzahl}</th><th style="width:80px">${T.colEinheit}</th><th style="width:110px">${T.colPreisEinh}</th><th style="width:80px">${T.colRabatt}</th><th style="width:100px">${T.colTotal2}</th><th style="width:78px"></th></tr>
           </thead>
           <tbody id="items-tbody"></tbody>
         </table>
@@ -186,6 +186,12 @@ export async function renderDocumentDetail(stage, id) {
           <button class="btn btn-sm" id="btn-add-article">${T.btnAddArticle}</button>
           <button class="btn btn-sm" id="btn-add-service">${T.btnAddService}</button>
           <button class="btn btn-sm" id="btn-add-item">${T.btnAddItem}</button>
+          <div class="bulk-discount">
+            <label>${T.bulkDiscountLabel}</label>
+            <input type="number" id="bulk-discount-input" step="0.5" min="0" max="100" placeholder="0">
+            <span>%</span>
+            <button class="btn btn-sm" id="btn-apply-discount">${T.bulkDiscountApply}</button>
+          </div>
         </div>
         <div class="totals-box" id="totals-box"></div>
       </div>
@@ -322,7 +328,7 @@ export async function renderDocumentDetail(stage, id) {
         return `
           <tr class="header-row" data-idx="${idx}">
             <td class="pos-cell">${it.pos}</td>
-            <td colspan="4"><input class="desc" data-idx="${idx}" data-field="description" value="${escapeHtml(it.description)}" placeholder="${T.groupTitlePlaceholder}"></td>
+            <td colspan="5"><input class="desc" data-idx="${idx}" data-field="description" value="${escapeHtml(it.description)}" placeholder="${T.groupTitlePlaceholder}"></td>
             <td class="total-cell"></td>
             <td class="actions-cell"><button class="btn btn-sm" data-remove="${idx}">✕</button></td>
           </tr>`;
@@ -338,6 +344,7 @@ export async function renderDocumentDetail(stage, id) {
             </select>
           </td>
           <td class="price-cell"><input type="number" step="0.05" data-idx="${idx}" data-field="unitPrice" value="${it.unitPrice ?? 0}"></td>
+          <td class="discount-cell"><input type="number" step="0.5" min="0" max="100" data-idx="${idx}" data-field="discount" value="${it.discount ?? 0}"></td>
           <td class="total-cell" id="total-${idx}">${chf(lineTotal(it))}</td>
           <td class="actions-cell"><button class="btn btn-sm" data-remove="${idx}">✕</button></td>
         </tr>`;
@@ -349,8 +356,9 @@ export async function renderDocumentDetail(stage, id) {
         const idx = Number(el.dataset.idx);
         const key = el.dataset.field;
         const item = doc.items[idx];
-        item[key] = key === 'qty' || key === 'unitPrice' ? Number(el.value) || 0 : el.value;
-        if (key === 'qty' || key === 'unitPrice') {
+        const isNumeric = key === 'qty' || key === 'unitPrice' || key === 'discount';
+        item[key] = isNumeric ? Number(el.value) || 0 : el.value;
+        if (isNumeric) {
           const cell = document.getElementById(`total-${idx}`);
           if (cell) cell.textContent = chf(lineTotal(item));
           renderTotals();
@@ -384,13 +392,18 @@ export async function renderDocumentDetail(stage, id) {
     renderItems(); renderTotals(); queueSave();
   });
   main.querySelector('#btn-add-article').addEventListener('click', () => openCatalogPicker(uiLang, tr(uiLang).catalog.articlesSingular, articles, (chosen) => {
-    doc.items.push({ id: crypto.randomUUID ? crypto.randomUUID() : String(Math.random()), isHeader: false, description: chosen.bezeichnung, qty: 1, unit: chosen.einheit, unitPrice: chosen.preis });
+    doc.items.push({ id: crypto.randomUUID ? crypto.randomUUID() : String(Math.random()), isHeader: false, description: chosen.bezeichnung, qty: 1, unit: chosen.einheit, unitPrice: chosen.preis, discount: 0 });
     renderItems(); renderTotals(); queueSave();
   }));
   main.querySelector('#btn-add-service').addEventListener('click', () => openCatalogPicker(uiLang, tr(uiLang).catalog.servicesSingular, services, (chosen) => {
-    doc.items.push({ id: crypto.randomUUID ? crypto.randomUUID() : String(Math.random()), isHeader: false, description: chosen.bezeichnung, qty: 1, unit: chosen.einheit, unitPrice: chosen.preis });
+    doc.items.push({ id: crypto.randomUUID ? crypto.randomUUID() : String(Math.random()), isHeader: false, description: chosen.bezeichnung, qty: 1, unit: chosen.einheit, unitPrice: chosen.preis, discount: 0 });
     renderItems(); renderTotals(); queueSave();
   }));
+  main.querySelector('#btn-apply-discount').addEventListener('click', () => {
+    const val = Math.min(100, Math.max(0, Number(main.querySelector('#bulk-discount-input').value) || 0));
+    doc.items.forEach(it => { if (!it.isHeader) it.discount = val; });
+    renderItems(); renderTotals(); queueSave();
+  });
 
   // --- Actions ---
   main.querySelector('#status-select').addEventListener('change', (e) => { doc.status = e.target.value; queueSave(); });

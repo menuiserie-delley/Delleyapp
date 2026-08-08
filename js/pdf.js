@@ -165,11 +165,12 @@ export async function buildDocumentPdf(doc, customer, settings, stage) {
   // ---- Positionstabelle ----
   const cols = [
     { key: 'pos', label: T.colPos, w: 12, align: 'left' },
-    { key: 'description', label: T.colBeschreibung, w: 76, align: 'left' },
-    { key: 'qty', label: T.colAnzahl, w: 18, align: 'right' },
-    { key: 'unit', label: T.colEinh, w: 16, align: 'left' },
-    { key: 'unitPrice', label: T.colPreisEinh, w: 26, align: 'right' },
-    { key: 'total', label: T.colTotal, w: 26, align: 'right' },
+    { key: 'description', label: T.colBeschreibung, w: 66, align: 'left' },
+    { key: 'qty', label: T.colAnzahl, w: 16, align: 'right' },
+    { key: 'unit', label: T.colEinh, w: 14, align: 'left' },
+    { key: 'unitPrice', label: T.colPreisEinh, w: 22, align: 'right' },
+    { key: 'discount', label: T.colRabatt, w: 16, align: 'right' },
+    { key: 'total', label: T.colTotal, w: 28, align: 'right' },
   ];
   const colX = [];
   { let x = MARGIN_L; for (const c of cols) { colX.push(x); x += c.w; } }
@@ -194,7 +195,7 @@ export async function buildDocumentPdf(doc, customer, settings, stage) {
   pdf.setFontSize(9.2);
   for (const it of numbered) {
     if (it.isHeader) {
-      const descLines = pdf.splitTextToSize(it.description || '', cols[1].w + cols[2].w + cols[3].w + cols[4].w + cols[5].w - 2);
+      const descLines = pdf.splitTextToSize(it.description || '', cols[1].w + cols[2].w + cols[3].w + cols[4].w + cols[5].w + cols[6].w - 2);
       const rowH = Math.max(6, descLines.length * 4.4 + 2);
       ensureSpace(rowH);
       pdf.setFont('helvetica', 'bold');
@@ -215,7 +216,8 @@ export async function buildDocumentPdf(doc, customer, settings, stage) {
     pdf.text(formatQty(it.qty), colX[2] + cols[2].w - 1.5, y + 4.3, { align: 'right' });
     pdf.text(it.unit || '', colX[3] + 1.5, y + 4.3);
     pdf.text(formatMoney(it.unitPrice), colX[4] + cols[4].w - 1.5, y + 4.3, { align: 'right' });
-    pdf.text(formatMoney(lineTotal(it)), colX[5] + cols[5].w - 1.5, y + 4.3, { align: 'right' });
+    if (Number(it.discount) > 0) pdf.text(formatPercent(it.discount) + '%', colX[5] + cols[5].w - 1.5, y + 4.3, { align: 'right' });
+    pdf.text(formatMoney(lineTotal(it)), colX[6] + cols[6].w - 1.5, y + 4.3, { align: 'right' });
     y += rowH;
     pdf.setDrawColor(224, 230, 230);
     pdf.setLineWidth(0.15);

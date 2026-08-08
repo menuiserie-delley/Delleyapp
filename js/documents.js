@@ -10,7 +10,7 @@ export const STAGES = {
 };
 
 export function emptyItem() {
-  return { id: uid(), isHeader: false, description: '', qty: 1, unit: 'Std', unitPrice: 0 };
+  return { id: uid(), isHeader: false, description: '', qty: 1, unit: 'Std', unitPrice: 0, discount: 0 };
 }
 
 export function emptyGroupHeader(title = '') {
@@ -49,7 +49,9 @@ export function newOfferte({ number, customerId, lang = 'de' }) {
 
 export function lineTotal(item) {
   if (item.isHeader) return 0;
-  return (Number(item.qty) || 0) * (Number(item.unitPrice) || 0);
+  const base = (Number(item.qty) || 0) * (Number(item.unitPrice) || 0);
+  const discount = Math.min(100, Math.max(0, Number(item.discount) || 0));
+  return base * (1 - discount / 100);
 }
 
 export function computeTotals(doc, mwstSatz) {
