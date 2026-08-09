@@ -1,7 +1,9 @@
 import { listTermine, getTermin, newTermin, saveTermin, deleteTermin } from '../termine.js';
 import { listCustomers } from '../customers.js';
+import { listBookingRequests, deleteBookingRequest } from '../bookingRequests.js';
+import { openCustomerForm } from './kunden.js';
 import { loadSettings } from '../settings.js';
-import { escapeHtml, customerFullName, debounce, todayISO } from '../utils.js';
+import { escapeHtml, customerFullName, debounce, todayISO, formatDateDE } from '../utils.js';
 import { openModal, confirmDialog, toast } from '../ui.js';
 import { tr } from '../i18n.js';
 
@@ -48,7 +50,7 @@ export async function renderKalender() {
   const uiLang = settings.sprache || 'de';
   const K = tr(uiLang).kalender;
 
-  const [termine, customers] = await Promise.all([listTermine(), listCustomers()]);
+  const [termine, customers, bookingRequests] = await Promise.all([listTermine(), listCustomers(), listBookingRequests()]);
   const customerMap = new Map(customers.map(c => [c.id, c]));
 
   const now = new Date();
@@ -66,6 +68,7 @@ export async function renderKalender() {
         <button class="btn btn-primary" id="btn-new-termin">${K.newTermin}</button>
       </div>
     </div>
+    <div id="booking-requests-section"></div>
     <div class="card">
       <div class="card-header">
         <div class="cal-nav">
@@ -165,6 +168,70 @@ export async function renderKalender() {
     renderDayList();
   }
 
+  function renderBookingRequests() {
+    const box = document.getElementById('booking-requests-section');
+    if (!bookingRequests.length) { box.innerHTML = ''; return; }
+    box.innerHTML = `
+      <div class="card">
+        <div class="card-header">${K.bookingRequestsTitle}</div>
+        <div class="card-body">
+          <div class="notes-list">
+            ${bookingRequests.map(r => `
+              <div class="note-item">
+                <div>
+                  <div class="note-date">${escapeHtml(K.requestWish(formatDateDE(r.wunschdatum), r.wunschzeit))}</div>
+                  <div class="note-text" style="font-weight:600">${escapeHtml([r.vorname, r.nachname].filter(Boolean).join(' '))}</div>
+                  <div class="text-muted" style="font-size:12.5px;margin-top:2px">${[r.email, r.telefon].filter(Boolean).map(escapeHtml).join(' · ')}</div>
+                  ${r.nachricht ? `<div class="text-muted" style="font-size:12.5px;margin-top:4px">${escapeHtml(r.nachricht)}</div>` : ''}
+                </div>
+                <div style="display:flex;gap:6px;flex-shrink:0">
+                  <button class="btn btn-sm btn-primary" data-accept="${r.id}">${K.btnAccept}</button>
+                  <button class="btn btn-sm" data-reject="${r.id}">${K.btnReject}</button>
+                </div>
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>`;
+    box.querySelectorAll('[data-accept]').forEach(el => el.addEventListener('click', () => {
+      const req = bookingRequests.find(r => r.id === el.dataset.accept);
+      if (req) acceptRequest(req);
+    }));
+    box.querySelectorAll('[data-reject]').forEach(el => el.addEventListener('click', async () => {
+      const ok = await confirmDialog(K.rejectConfirm, { lang: uiLang });
+      if (!ok) return;
+      await deleteBookingRequest(el.dataset.reject);
+      toast(K.rejectedToast);
+      await refreshBookingRequests();
+    }));
+  }
+
+  async function refreshBookingRequests() {
+    const fresh = await listBookingRequests();
+    bookingRequests.length = 0;
+    bookingRequests.push(...fresh);
+    renderBookingRequests();
+  }
+
+  function acceptRequest(req) {
+    const prefillCustomer = { anrede: 'Herr', vorname: req.vorname, nachname: req.nachname, telefon: req.telefon, email: req.email };
+    openCustomerForm(uiLang, prefillCustomer, async (savedCustomer) => {
+      await newTermin({
+        titel: K.consultationTitle,
+        datum: req.wunschdatum || todayISO(),
+        von: req.wunschzeit || '',
+        bis: '',
+        ort: '',
+        customerId: savedCustomer.id,
+        kommission: '',
+        notiz: req.nachricht || '',
+      });
+      await deleteBookingRequest(req.id);
+      toast(K.acceptedToast, 'success');
+      await refreshData();
+      await refreshBookingRequests();
+    });
+  }
+
   function openTerminModal(id) {
     openTerminEditor(uiLang, customers, customerMap, id, selectedDate, async () => { await refreshData(); });
   }
@@ -189,6 +256,7 @@ export async function renderKalender() {
     renderDayList();
   });
 
+  renderBookingRequests();
   renderGrid();
   renderDayList();
 }

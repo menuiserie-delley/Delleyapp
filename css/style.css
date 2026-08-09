@@ -580,7 +580,7 @@ body:not(.authenticated) .mobile-tabbar,
 body:not(.authenticated) .mobile-more-sheet {
   display: none !important;
 }
-.login-card {
+.login-card, .public-card {
   background: var(--brand);
   border-radius: 16px;
   padding: 40px 32px;
@@ -588,15 +588,19 @@ body:not(.authenticated) .mobile-more-sheet {
   max-width: 360px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.25);
 }
+.public-card { max-width: 460px; }
 .login-logo { display: block; margin: 0 auto 28px; max-width: 200px; width: 100%; }
-.login-card .field { margin-bottom: 16px; }
-.login-card .field label { color: rgba(255,255,255,0.75); }
-.login-card input {
+.login-card .field, .public-card .field { margin-bottom: 16px; }
+.login-card .field label, .public-card .field label { color: rgba(255,255,255,0.75); }
+.login-card input, .public-card input, .public-card textarea, .public-card select {
   background: rgba(255,255,255,0.08);
   border-color: rgba(255,255,255,0.25);
   color: #fff;
 }
-.login-card input:focus { border-color: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,0.15); }
+.login-card input:focus, .public-card input:focus, .public-card textarea:focus {
+  border-color: #fff;
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.15);
+}
 .login-error {
   background: rgba(255,255,255,0.12);
   color: #ffd7d2;
@@ -605,9 +609,19 @@ body:not(.authenticated) .mobile-more-sheet {
   font-size: 13px;
   margin-bottom: 14px;
 }
-.login-card .btn-primary { background: #fff; color: var(--brand-dark); border-color: #fff; }
-.login-card .btn-primary:hover { background: rgba(255,255,255,0.9); }
-.login-card .btn-primary:disabled { opacity: 0.7; }
+.login-card .btn-primary, .public-card .btn-primary { background: #fff; color: var(--brand-dark); border-color: #fff; }
+.login-card .btn-primary:hover, .public-card .btn-primary:hover { background: rgba(255,255,255,0.9); }
+.login-card .btn-primary:disabled, .public-card .btn-primary:disabled { opacity: 0.7; }
+
+/* Öffentliche Buchungsseite (termin-anfrage.html) */
+#booking-screen {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  padding: 30px 16px;
+}
 
 /* Kalender */
 .card-header:has(.cal-nav) { flex-wrap: wrap; gap: 10px; }
