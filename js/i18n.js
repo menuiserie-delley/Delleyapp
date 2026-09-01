@@ -205,6 +205,18 @@ const de = {
     acceptedToast: 'Termin und Kunde angelegt',
     rejectedToast: 'Anfrage abgelehnt',
     consultationTitle: 'Beratungstermin',
+    confirmationMailSubject: 'Terminbestätigung Menuiserie Delley',
+    confirmationMailBody: (greeting, datum, zeit) => `${greeting}
+
+vielen Dank für Ihre Anfrage. Wir bestätigen Ihnen hiermit gerne folgenden Termin:
+
+Datum: ${datum}${zeit ? `
+Uhrzeit: ${zeit}` : ''}
+
+Falls dieser Termin nicht passt, melden Sie sich bitte bei uns — wir finden gerne gemeinsam einen passenden Termin.
+
+Freundliche Grüsse
+Menuiserie Delley`,
   },
   mail: {
     noEmailTitle: 'Keine E-Mail-Adresse',
@@ -309,7 +321,7 @@ const de = {
     fieldAdresseHint: 'Strasse Nr.',
     fieldPlzOrt: 'PLZ Ort',
     fieldPlzOrtHint: '2553 Safnern',
-    fieldEmail: 'E-Mail (optional)',
+    fieldEmail: 'E-Mail',
     fieldTelefon: 'Telefon',
     fieldWunschdatum: 'Wunschdatum',
     fieldWunschzeit: 'Wunschzeit (optional)',
@@ -317,8 +329,8 @@ const de = {
     nachrichtPlaceholder: 'z. B. Beratung für Küchenumbau, Parkett im Wohnzimmer…',
     btnSubmit: 'Termin anfragen',
     submitting: 'Wird gesendet…',
-    successTitle: 'Danke für deine Anfrage!',
-    successBody: 'Wir melden uns so schnell wie möglich bei dir, um den Termin zu bestätigen.',
+    successTitle: 'Vielen Dank für Ihre Anfrage!',
+    successBody: 'Wir werden uns so schnell wie möglich bei Ihnen melden, um den Termin zu bestätigen oder einen passenden Termin vorzuschlagen.',
     errorGeneric: 'Etwas ist schiefgelaufen. Bitte versuch es nochmal oder ruf uns direkt an.',
   },
 };
@@ -528,6 +540,18 @@ const fr = {
     acceptedToast: 'Rendez-vous et client créés',
     rejectedToast: 'Demande refusée',
     consultationTitle: 'Rendez-vous de conseil',
+    confirmationMailSubject: 'Confirmation de rendez-vous Menuiserie Delley',
+    confirmationMailBody: (greeting, datum, zeit) => `${greeting}
+
+merci pour votre demande. Nous avons le plaisir de vous confirmer le rendez-vous suivant :
+
+Date : ${datum}${zeit ? `
+Heure : ${zeit}` : ''}
+
+Si ce rendez-vous ne vous convient pas, n'hésitez pas à nous contacter — nous trouverons volontiers une date qui vous convient.
+
+Meilleures salutations
+Menuiserie Delley`,
   },
   mail: {
     noEmailTitle: 'Aucune adresse e-mail',
@@ -632,7 +656,7 @@ const fr = {
     fieldAdresseHint: 'Rue N°',
     fieldPlzOrt: 'NPA Localité',
     fieldPlzOrtHint: '2553 Safnern',
-    fieldEmail: 'E-mail (facultatif)',
+    fieldEmail: 'E-mail',
     fieldTelefon: 'Téléphone',
     fieldWunschdatum: 'Date souhaitée',
     fieldWunschzeit: 'Heure souhaitée (facultatif)',
@@ -641,7 +665,7 @@ const fr = {
     btnSubmit: 'Demander un rendez-vous',
     submitting: 'Envoi en cours…',
     successTitle: 'Merci pour votre demande !',
-    successBody: 'Nous vous recontactons dès que possible pour confirmer le rendez-vous.',
+    successBody: 'Nous vous recontacterons dès que possible afin de confirmer le rendez-vous ou de vous proposer une date qui convient.',
     errorGeneric: "Une erreur s'est produite. Merci de réessayer ou de nous appeler directement.",
   },
 };

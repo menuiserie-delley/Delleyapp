@@ -49,7 +49,7 @@ function render() {
         </div>
         <div class="field span-2">
           <label>${B.fieldEmail}</label>
-          <input name="email" type="email">
+          <input name="email" type="email" required>
         </div>
         <div class="field">
           <label>${B.fieldWunschdatum}</label>
@@ -86,21 +86,24 @@ function render() {
     submitBtn.disabled = true;
     submitBtn.textContent = B.submitting;
     const fd = new FormData(form);
+    const anrede = fd.get('anrede');
+    const nachname = fd.get('nachname').trim();
     try {
       await submitBookingRequest({
-        anrede: fd.get('anrede'),
+        anrede,
         firma: (fd.get('firma') || '').trim(),
         vorname: fd.get('vorname').trim(),
-        nachname: fd.get('nachname').trim(),
+        nachname,
         adresse: fd.get('adresse').trim(),
         plzOrt: fd.get('plzOrt').trim(),
-        email: (fd.get('email') || '').trim(),
+        email: fd.get('email').trim(),
         telefon: fd.get('telefon').trim(),
         wunschdatum: fd.get('wunschdatum'),
         wunschzeit: fd.get('wunschzeit') || '',
         nachricht: (fd.get('nachricht') || '').trim(),
+        lang,
       });
-      renderSuccess();
+      renderSuccess(anrede, nachname);
     } catch (err) {
       errorBox.textContent = B.errorGeneric;
       errorBox.style.display = 'block';
@@ -110,13 +113,16 @@ function render() {
   });
 }
 
-function renderSuccess() {
+function renderSuccess(anrede, nachname) {
   const B = tr(lang).booking;
+  const G = tr(lang).greeting;
+  const greeting = anrede === 'Frau' ? G.Frau(nachname) : G.Herr(nachname);
   const root = document.getElementById('booking-root');
   root.innerHTML = `
     <img src="assets/logo-full-white.png" alt="Menuiserie Delley" class="login-logo">
     <h1 style="color:#fff;font-size:19px;margin:0 0 10px">${B.successTitle}</h1>
-    <p style="color:rgba(255,255,255,0.85);font-size:14px;line-height:1.5;margin:0">${B.successBody}</p>
+    <p style="color:rgba(255,255,255,0.9);font-size:14px;line-height:1.6;margin:0 0 10px">${greeting}</p>
+    <p style="color:rgba(255,255,255,0.85);font-size:14px;line-height:1.6;margin:0">${B.successBody}</p>
   `;
 }
 
