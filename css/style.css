@@ -835,3 +835,5 @@ body:not(.authenticated) .mobile-more-sheet {
   .page-header h1 { font-size: 19px; }
 }
 .mb-0 { margin-bottom: 0; }
+
+.required-star { color: #ff9d9d; }

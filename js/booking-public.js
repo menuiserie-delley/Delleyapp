@@ -15,6 +15,7 @@ function render() {
     <h1 style="color:#fff;font-size:19px;margin:0 0 6px">${B.title}</h1>
     <p style="color:rgba(255,255,255,0.75);font-size:13.5px;margin:0 0 22px">${B.subtitle}</p>
     <form id="booking-form">
+      <p style="color:rgba(255,255,255,0.6);font-size:12px;margin:0 0 14px">${B.requiredLegend}</p>
       <div class="form-grid">
         <div class="field">
           <label>${B.fieldAnrede}</label>
@@ -28,31 +29,31 @@ function render() {
           <input name="firma">
         </div>
         <div class="field">
-          <label>${B.fieldVorname}</label>
+          <label>${B.fieldVorname} <span class="required-star">*</span></label>
           <input name="vorname" required>
         </div>
         <div class="field">
-          <label>${B.fieldNachname}</label>
+          <label>${B.fieldNachname} <span class="required-star">*</span></label>
           <input name="nachname" required>
         </div>
         <div class="field span-2">
-          <label>${B.fieldAdresse}</label>
+          <label>${B.fieldAdresse} <span class="required-star">*</span></label>
           <input name="adresse" placeholder="${B.fieldAdresseHint}" required>
         </div>
         <div class="field">
-          <label>${B.fieldPlzOrt}</label>
+          <label>${B.fieldPlzOrt} <span class="required-star">*</span></label>
           <input name="plzOrt" placeholder="${B.fieldPlzOrtHint}" required>
         </div>
         <div class="field">
-          <label>${B.fieldTelefon}</label>
+          <label>${B.fieldTelefon} <span class="required-star">*</span></label>
           <input name="telefon" type="tel" required>
         </div>
         <div class="field span-2">
-          <label>${B.fieldEmail}</label>
+          <label>${B.fieldEmail} <span class="required-star">*</span></label>
           <input name="email" type="email" required>
         </div>
         <div class="field">
-          <label>${B.fieldWunschdatum}</label>
+          <label>${B.fieldWunschdatum} <span class="required-star">*</span></label>
           <input name="wunschdatum" type="date" required>
         </div>
         <div class="field">
