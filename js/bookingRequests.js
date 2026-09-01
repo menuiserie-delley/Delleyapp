@@ -11,11 +11,15 @@ function uid() {
 
 // Öffentlich aufrufbar (auch ohne Login) — die Firestore-Regeln erlauben für diese
 // Collection nur "create" ohne Anmeldung, lesen/löschen bleibt dem angemeldeten Nutzer vorbehalten.
-export async function submitBookingRequest({ vorname, nachname, email, telefon, wunschdatum, wunschzeit, nachricht }) {
+export async function submitBookingRequest({ anrede, firma, vorname, nachname, adresse, plzOrt, email, telefon, wunschdatum, wunschzeit, nachricht }) {
   const request = {
     id: uid(),
+    anrede: anrede || '',
+    firma: firma || '',
     vorname: vorname || '',
     nachname: nachname || '',
+    adresse: adresse || '',
+    plzOrt: plzOrt || '',
     email: email || '',
     telefon: telefon || '',
     wunschdatum: wunschdatum || '',

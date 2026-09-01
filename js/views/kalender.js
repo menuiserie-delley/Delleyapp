@@ -180,8 +180,9 @@ export async function renderKalender() {
               <div class="note-item">
                 <div>
                   <div class="note-date">${escapeHtml(K.requestWish(formatDateDE(r.wunschdatum), r.wunschzeit))}</div>
-                  <div class="note-text" style="font-weight:600">${escapeHtml([r.vorname, r.nachname].filter(Boolean).join(' '))}</div>
-                  <div class="text-muted" style="font-size:12.5px;margin-top:2px">${[r.email, r.telefon].filter(Boolean).map(escapeHtml).join(' · ')}</div>
+                  <div class="note-text" style="font-weight:600">${escapeHtml([r.anrede, r.vorname, r.nachname].filter(Boolean).join(' '))}${r.firma ? escapeHtml(` (${r.firma})`) : ''}</div>
+                  <div class="text-muted" style="font-size:12.5px;margin-top:2px">${[r.adresse, r.plzOrt].filter(Boolean).map(escapeHtml).join(', ')}</div>
+                  <div class="text-muted" style="font-size:12.5px;margin-top:2px">${[r.telefon, r.email].filter(Boolean).map(escapeHtml).join(' · ')}</div>
                   ${r.nachricht ? `<div class="text-muted" style="font-size:12.5px;margin-top:4px">${escapeHtml(r.nachricht)}</div>` : ''}
                 </div>
                 <div style="display:flex;gap:6px;flex-shrink:0">
@@ -213,7 +214,16 @@ export async function renderKalender() {
   }
 
   function acceptRequest(req) {
-    const prefillCustomer = { anrede: 'Herr', vorname: req.vorname, nachname: req.nachname, telefon: req.telefon, email: req.email };
+    const prefillCustomer = {
+      anrede: req.anrede || 'Herr',
+      firma: req.firma || '',
+      vorname: req.vorname,
+      nachname: req.nachname,
+      adresse: req.adresse || '',
+      plzOrt: req.plzOrt || '',
+      telefon: req.telefon,
+      email: req.email,
+    };
     openCustomerForm(uiLang, prefillCustomer, async (savedCustomer) => {
       await newTermin({
         titel: K.consultationTitle,

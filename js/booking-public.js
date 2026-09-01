@@ -17,6 +17,17 @@ function render() {
     <form id="booking-form">
       <div class="form-grid">
         <div class="field">
+          <label>${B.fieldAnrede}</label>
+          <select name="anrede" required>
+            <option value="Herr">${B.anredeHerr}</option>
+            <option value="Frau">${B.anredeFrau}</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>${B.fieldFirma}</label>
+          <input name="firma">
+        </div>
+        <div class="field">
           <label>${B.fieldVorname}</label>
           <input name="vorname" required>
         </div>
@@ -24,13 +35,21 @@ function render() {
           <label>${B.fieldNachname}</label>
           <input name="nachname" required>
         </div>
+        <div class="field span-2">
+          <label>${B.fieldAdresse}</label>
+          <input name="adresse" placeholder="${B.fieldAdresseHint}" required>
+        </div>
         <div class="field">
-          <label>${B.fieldEmail}</label>
-          <input name="email" type="email" required>
+          <label>${B.fieldPlzOrt}</label>
+          <input name="plzOrt" placeholder="${B.fieldPlzOrtHint}" required>
         </div>
         <div class="field">
           <label>${B.fieldTelefon}</label>
-          <input name="telefon" type="tel">
+          <input name="telefon" type="tel" required>
+        </div>
+        <div class="field span-2">
+          <label>${B.fieldEmail}</label>
+          <input name="email" type="email">
         </div>
         <div class="field">
           <label>${B.fieldWunschdatum}</label>
@@ -69,10 +88,14 @@ function render() {
     const fd = new FormData(form);
     try {
       await submitBookingRequest({
+        anrede: fd.get('anrede'),
+        firma: (fd.get('firma') || '').trim(),
         vorname: fd.get('vorname').trim(),
         nachname: fd.get('nachname').trim(),
-        email: fd.get('email').trim(),
-        telefon: (fd.get('telefon') || '').trim(),
+        adresse: fd.get('adresse').trim(),
+        plzOrt: fd.get('plzOrt').trim(),
+        email: (fd.get('email') || '').trim(),
+        telefon: fd.get('telefon').trim(),
         wunschdatum: fd.get('wunschdatum'),
         wunschzeit: fd.get('wunschzeit') || '',
         nachricht: (fd.get('nachricht') || '').trim(),
