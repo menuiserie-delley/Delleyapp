@@ -187,7 +187,7 @@ export async function renderKalender() {
                 </div>
                 <div style="display:flex;gap:6px;flex-shrink:0">
                   <button class="btn btn-sm btn-primary" data-accept="${r.id}">${K.btnAccept}</button>
-                  <button class="btn btn-sm" data-reject="${r.id}">${K.btnReject}</button>
+                  <button class="btn btn-sm" data-propose="${r.id}">${K.btnPropose}</button>
                 </div>
               </div>`).join('')}
           </div>
@@ -197,12 +197,9 @@ export async function renderKalender() {
       const req = bookingRequests.find(r => r.id === el.dataset.accept);
       if (req) acceptRequest(req);
     }));
-    box.querySelectorAll('[data-reject]').forEach(el => el.addEventListener('click', async () => {
-      const ok = await confirmDialog(K.rejectConfirm, { lang: uiLang });
-      if (!ok) return;
-      await deleteBookingRequest(el.dataset.reject);
-      toast(K.rejectedToast);
-      await refreshBookingRequests();
+    box.querySelectorAll('[data-propose]').forEach(el => el.addEventListener('click', () => {
+      const req = bookingRequests.find(r => r.id === el.dataset.propose);
+      if (req) openProposeAlternativeModal(req);
     }));
   }
 
@@ -254,6 +251,52 @@ export async function renderKalender() {
     const body = KM.confirmationMailBody(greeting, formatDateDE(req.wunschdatum), req.wunschzeit || '');
     const subject = encodeURIComponent(KM.confirmationMailSubject);
     window.location.href = `mailto:${req.email}?subject=${subject}&body=${encodeURIComponent(body)}`;
+  }
+
+  // Lässt den Handwerker ein alternatives Datum/Zeitfenster wählen, wenn der gewünschte
+  // Termin nicht frei ist, und öffnet danach eine vorausgefüllte Vorschlags-Mail in der
+  // Sprache, die der Kunde bei der Anfrage gewählt hat.
+  function openProposeAlternativeModal(req) {
+    openModal({
+      title: K.proposeModalTitle,
+      width: '480px',
+      bodyHtml: `
+        <p class="text-muted" style="font-size:13px;margin:0 0 16px">${K.proposeModalHint}</p>
+        <div class="form-grid">
+          <div class="field">
+            <label>${K.fieldProposedDatum}</label>
+            <input id="p-datum" type="date" value="${req.wunschdatum || todayISO()}">
+          </div>
+          <div class="field">
+            <label>${K.fieldProposedZeit}</label>
+            <input id="p-zeit" type="time" value="${req.wunschzeit || ''}">
+          </div>
+        </div>`,
+      footerHtml: `
+        <button class="btn" data-cancel>${tr(uiLang).common.cancel}</button>
+        <button class="btn btn-primary" data-send>${K.btnSendProposal}</button>`,
+      onMount: (root, closeFn) => {
+        root.querySelector('[data-cancel]').addEventListener('click', closeFn);
+        root.querySelector('[data-send]').addEventListener('click', async () => {
+          const datum = root.querySelector('#p-datum').value;
+          const zeit = root.querySelector('#p-zeit').value;
+          if (!datum) return;
+          if (req.email) {
+            const mailLang = req.lang === 'fr' ? 'fr' : 'de';
+            const KM = tr(mailLang).kalender;
+            const G = tr(mailLang).greeting;
+            const greeting = req.anrede === 'Frau' ? G.Frau(req.nachname) : G.Herr(req.nachname);
+            const body = KM.alternativeMailBody(greeting, formatDateDE(datum), zeit || '');
+            const subject = encodeURIComponent(KM.alternativeMailSubject);
+            window.location.href = `mailto:${req.email}?subject=${subject}&body=${encodeURIComponent(body)}`;
+          }
+          await deleteBookingRequest(req.id);
+          toast(K.proposalSentToast, 'success');
+          closeFn();
+          await refreshBookingRequests();
+        });
+      },
+    });
   }
 
   function openTerminModal(id) {

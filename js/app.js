@@ -10,6 +10,7 @@ import { loadSettings, saveSettings } from './settings.js';
 import { tr } from './i18n.js';
 import { onAuthChange } from './auth.js';
 import { renderLogin } from './login.js';
+import { startBookingRequestWatcher } from './notifications.js';
 
 async function initSidebar() {
   const settings = await loadSettings();
@@ -99,4 +100,5 @@ onAuthChange(async (user) => {
   appStarted = true;
   await initSidebar();
   startRouter();
+  startBookingRequestWatcher();
 });

@@ -3,7 +3,7 @@
 // Alle Daten (Kunden, Offerten, Fotos, Notizen) liegen in IndexedDB, nicht hier —
 // dieser Cache betrifft nur die App-Dateien selbst (HTML/JS/CSS/Icons).
 
-const CACHE_VERSION = 'delley-v7';
+const CACHE_VERSION = 'delley-v8';
 const FIREBASE_SDK_VERSION = '12.17.1';
 const CORE_ASSETS = [
   './',
@@ -22,6 +22,7 @@ const CORE_ASSETS = [
   './js/termine.js',
   './js/attachments.js',
   './js/bookingRequests.js',
+  './js/notifications.js',
   './js/firebase.js',
   './js/firebase-config.js',
   './js/auth.js',
@@ -65,6 +66,22 @@ self.addEventListener('activate', (event) => {
     ))
   );
   self.clients.claim();
+});
+
+// Klick auf eine Benachrichtigung: bestehendes Fenster fokussieren und dorthin
+// navigieren (z.B. zum Kalender), sonst ein neues Fenster öffnen.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || './';
+  event.waitUntil((async () => {
+    const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    if (allClients.length > 0) {
+      const client = allClients[0];
+      if ('navigate' in client) await client.navigate(url);
+      return client.focus();
+    }
+    return self.clients.openWindow(url);
+  })());
 });
 
 self.addEventListener('fetch', (event) => {

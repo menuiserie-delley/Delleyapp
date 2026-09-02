@@ -6,6 +6,7 @@ import { logout } from '../auth.js';
 import { escapeHtml } from '../utils.js';
 import { toast, confirmDialog } from '../ui.js';
 import { tr } from '../i18n.js';
+import { permissionState, requestPermission } from '../notifications.js';
 
 export async function renderEinstellungen() {
   const main = document.getElementById('main');
@@ -66,6 +67,15 @@ export async function renderEinstellungen() {
             <input type="file" id="import-file" accept="application/json" style="display:none">
           </label>
         </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">${T.cardNotifications}</div>
+      <div class="card-body">
+        <p style="margin-top:0">${T.notifIntro}</p>
+        <p class="text-muted" style="font-size:13px" id="notif-status"></p>
+        <button class="btn btn-primary" id="btn-enable-notif" style="display:none">${T.btnEnableNotif}</button>
       </div>
     </div>
 
@@ -189,6 +199,32 @@ export async function renderEinstellungen() {
     } catch (err) {
       toast(T.importError(err.message), 'error');
     }
+  });
+
+  function renderNotifCard() {
+    const statusEl = main.querySelector('#notif-status');
+    const btn = main.querySelector('#btn-enable-notif');
+    const state = permissionState();
+    if (state === 'unsupported') {
+      statusEl.textContent = T.notifUnsupported;
+      btn.style.display = 'none';
+    } else if (state === 'granted') {
+      statusEl.textContent = T.notifActive;
+      btn.style.display = 'none';
+    } else if (state === 'denied') {
+      statusEl.textContent = T.notifBlocked;
+      btn.style.display = 'none';
+    } else {
+      statusEl.textContent = T.notifInactive;
+      btn.style.display = '';
+    }
+  }
+  renderNotifCard();
+  main.querySelector('#btn-enable-notif').addEventListener('click', async () => {
+    const result = await requestPermission();
+    if (result === 'granted') toast(T.notifEnabledToast, 'success');
+    else if (result === 'denied') toast(T.notifDeniedToast, 'error');
+    renderNotifCard();
   });
 
   main.querySelector('#btn-logout').addEventListener('click', async () => {

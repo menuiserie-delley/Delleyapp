@@ -200,10 +200,8 @@ const de = {
     noBookingRequests: 'Keine offenen Terminanfragen.',
     requestWish: (date, time) => `Wunsch: ${date}${time ? ', ' + time : ''}`,
     btnAccept: 'Annehmen',
-    btnReject: 'Ablehnen',
-    rejectConfirm: 'Diese Terminanfrage wirklich ablehnen und löschen?',
+    btnPropose: 'Anderen Termin vorschlagen',
     acceptedToast: 'Termin und Kunde angelegt',
-    rejectedToast: 'Anfrage abgelehnt',
     consultationTitle: 'Beratungstermin',
     confirmationMailSubject: 'Terminbestätigung Menuiserie Delley',
     confirmationMailBody: (greeting, datum, zeit) => `${greeting}
@@ -217,6 +215,26 @@ Falls dieser Termin nicht passt, melden Sie sich bitte bei uns — wir finden ge
 
 Freundliche Grüsse
 Menuiserie Delley`,
+    proposeModalTitle: 'Anderen Termin vorschlagen',
+    proposeModalHint: 'Wähle ein Datum und optional eine Uhrzeit — der Kunde erhält diesen Vorschlag per E-Mail. Die ursprüngliche Anfrage wird danach aus der Liste entfernt.',
+    fieldProposedDatum: 'Vorgeschlagenes Datum',
+    fieldProposedZeit: 'Vorgeschlagene Uhrzeit (optional)',
+    btnSendProposal: 'Vorschlagen & Mail öffnen',
+    proposalSentToast: 'Terminvorschlag gesendet',
+    alternativeMailSubject: 'Terminvorschlag Menuiserie Delley',
+    alternativeMailBody: (greeting, datum, zeit) => `${greeting}
+
+danke für Ihre Anfrage. Leider war Ihr gewünschter Termin nicht frei, weshalb wir Ihnen folgenden Termin vorschlagen:
+
+Datum: ${datum}${zeit ? `
+Uhrzeit: ${zeit}` : ''}
+
+Sollte Ihnen dieser Termin nicht passen, melden Sie sich bitte bei uns, damit wir gemeinsam einen passenden Termin finden.
+
+Freundliche Grüsse
+Menuiserie Delley`,
+    pushNewRequestTitle: 'Neue Terminanfrage',
+    pushNewRequestBody: name => `${name} hat einen Beratungstermin angefragt.`,
   },
   mail: {
     noEmailTitle: 'Keine E-Mail-Adresse',
@@ -239,12 +257,20 @@ Menuiserie Delley`,
     title: 'Einstellungen',
     subtitle: 'Firmendaten, Textbausteine, Nummerierung und Datensicherung',
     cardFirma: 'Firmendaten', cardBank: 'Zahlung & Bank', cardNumbering: 'Nummerierung & Konditionen',
-    cardTexts: 'Standardtexte', cardBackup: 'Datensicherung', cardAccount: 'Konto',
+    cardTexts: 'Standardtexte', cardBackup: 'Datensicherung', cardAccount: 'Konto', cardNotifications: 'Benachrichtigungen',
     numberingHint: 'Offerte, Auftragsbestätigung und Rechnung eines Projekts behalten dieselbe Nummer über den gesamten Ablauf hinweg (z. B. 2026-1501) — genau wie bisher in deiner Excel-Datei.',
     backupIntro: 'Alle Daten werden automatisch in der Cloud gespeichert und zwischen deinen Geräten synchronisiert. Zusätzlich empfiehlt sich hin und wieder eine Sicherungsdatei als Rückversicherung — z. B. bevor du grössere Änderungen vornimmst.',
     accountIntro: 'Du bist angemeldet. Beim Abmelden werden keine Daten gelöscht — sie bleiben in der Cloud gespeichert.',
     btnLogout: 'Abmelden',
     logoutConfirm: 'Wirklich abmelden?',
+    notifIntro: 'Erhalte eine Benachrichtigung, sobald eine neue Terminanfrage eintrifft, während die App in einem Tab geöffnet ist (auch im Hintergrund).',
+    notifActive: 'Benachrichtigungen sind aktiviert.',
+    notifInactive: 'Benachrichtigungen sind noch nicht aktiviert.',
+    notifBlocked: 'Benachrichtigungen sind im Browser blockiert. Aktiviere sie in den Browser-Einstellungen für diese Seite, um sie zu nutzen.',
+    notifUnsupported: 'Dein Browser unterstützt leider keine Benachrichtigungen.',
+    btnEnableNotif: 'Benachrichtigungen aktivieren',
+    notifEnabledToast: 'Benachrichtigungen aktiviert',
+    notifDeniedToast: 'Berechtigung wurde nicht erteilt',
     btnExport: '⬇️ Backup herunterladen', btnImport: '⬆️ Backup wiederherstellen',
     btnSaveAll: 'Alle Einstellungen speichern',
     fFirma: 'Firma', fInhaber: 'Inhaber', fAdresse: 'Adresse', fPlzOrt: 'PLZ Ort', fTelefon: 'Telefon', fEmail: 'E-Mail',
@@ -536,10 +562,8 @@ const fr = {
     noBookingRequests: 'Aucune demande de rendez-vous en attente.',
     requestWish: (date, time) => `Souhait : ${date}${time ? ', ' + time : ''}`,
     btnAccept: 'Accepter',
-    btnReject: 'Refuser',
-    rejectConfirm: 'Vraiment refuser et supprimer cette demande ?',
+    btnPropose: 'Proposer une autre date',
     acceptedToast: 'Rendez-vous et client créés',
-    rejectedToast: 'Demande refusée',
     consultationTitle: 'Rendez-vous de conseil',
     confirmationMailSubject: 'Confirmation de rendez-vous Menuiserie Delley',
     confirmationMailBody: (greeting, datum, zeit) => `${greeting}
@@ -553,6 +577,26 @@ Si ce rendez-vous ne vous convient pas, n'hésitez pas à nous contacter — nou
 
 Meilleures salutations
 Menuiserie Delley`,
+    proposeModalTitle: 'Proposer une autre date',
+    proposeModalHint: "Choisissez une date et, si besoin, une heure — le client recevra cette proposition par e-mail. La demande initiale sera ensuite retirée de la liste.",
+    fieldProposedDatum: 'Date proposée',
+    fieldProposedZeit: 'Heure proposée (optionnel)',
+    btnSendProposal: 'Proposer & ouvrir le mail',
+    proposalSentToast: 'Proposition de rendez-vous envoyée',
+    alternativeMailSubject: 'Proposition de rendez-vous Menuiserie Delley',
+    alternativeMailBody: (greeting, datum, zeit) => `${greeting}
+
+merci pour votre demande. Malheureusement, la date souhaitée n'était pas disponible. Nous vous proposons donc le rendez-vous suivant :
+
+Date : ${datum}${zeit ? `
+Heure : ${zeit}` : ''}
+
+Si cette date ne vous convient pas, n'hésitez pas à nous contacter afin de trouver ensemble une date qui vous convient.
+
+Meilleures salutations
+Menuiserie Delley`,
+    pushNewRequestTitle: 'Nouvelle demande de rendez-vous',
+    pushNewRequestBody: name => `${name} a demandé un rendez-vous de conseil.`,
   },
   mail: {
     noEmailTitle: 'Aucune adresse e-mail',
@@ -575,12 +619,20 @@ Menuiserie Delley`,
     title: 'Paramètres',
     subtitle: "Données de l'entreprise, textes standards, numérotation et sauvegarde",
     cardFirma: "Données de l'entreprise", cardBank: 'Paiement & banque', cardNumbering: 'Numérotation & conditions',
-    cardTexts: 'Textes standards', cardBackup: 'Sauvegarde des données', cardAccount: 'Compte',
+    cardTexts: 'Textes standards', cardBackup: 'Sauvegarde des données', cardAccount: 'Compte', cardNotifications: 'Notifications',
     numberingHint: "Le devis, la confirmation de commande et la facture d'un même projet conservent le même numéro tout au long du processus (p.ex. 2026-1501) — comme dans votre ancien fichier Excel.",
     backupIntro: 'Toutes les données sont enregistrées automatiquement dans le cloud et synchronisées entre vos appareils. Une sauvegarde ponctuelle reste toutefois recommandée comme filet de sécurité — p.ex. avant une modification importante.',
     accountIntro: 'Vous êtes connecté. La déconnexion ne supprime aucune donnée — tout reste enregistré dans le cloud.',
     btnLogout: 'Se déconnecter',
     logoutConfirm: 'Vraiment se déconnecter ?',
+    notifIntro: "Recevez une notification dès qu'une nouvelle demande de rendez-vous arrive, tant que l'application est ouverte dans un onglet (même en arrière-plan).",
+    notifActive: 'Les notifications sont activées.',
+    notifInactive: 'Les notifications ne sont pas encore activées.',
+    notifBlocked: 'Les notifications sont bloquées dans le navigateur. Activez-les dans les paramètres du navigateur pour ce site afin de les utiliser.',
+    notifUnsupported: 'Votre navigateur ne prend malheureusement pas en charge les notifications.',
+    btnEnableNotif: 'Activer les notifications',
+    notifEnabledToast: 'Notifications activées',
+    notifDeniedToast: "L'autorisation n'a pas été accordée",
     btnExport: '⬇️ Télécharger la sauvegarde', btnImport: '⬆️ Restaurer une sauvegarde',
     btnSaveAll: 'Enregistrer tous les paramètres',
     fFirma: 'Entreprise', fInhaber: 'Titulaire', fAdresse: 'Adresse', fPlzOrt: 'NPA Localité', fTelefon: 'Téléphone', fEmail: 'E-mail',
