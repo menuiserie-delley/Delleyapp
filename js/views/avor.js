@@ -1,10 +1,12 @@
 import { listAvorEntries, getAvorEntry, newAvorEntry, saveAvorEntry, deleteAvorEntry } from '../avor.js';
 import { listCustomers } from '../customers.js';
+import { listProjekte, saveProjekt, projektLabel } from '../projekte.js';
 import { listPhotos, addPhoto, deletePhoto, listNotes, addNote, deleteNote } from '../attachments.js';
 import { loadSettings } from '../settings.js';
 import { escapeHtml, customerFullName, customerAddressLines, debounce } from '../utils.js';
 import { openModal, confirmDialog, toast } from '../ui.js';
 import { navigate } from '../router.js';
+import { attachPickerSearch } from '../picker.js';
 import { tr } from '../i18n.js';
 
 function customerLabel(c) {
@@ -30,11 +32,12 @@ export async function renderAvorList() {
     <div class="card"><div class="card-body" id="table-wrap"></div></div>
   `;
 
-  const [entries, customers] = await Promise.all([listAvorEntries(), listCustomers()]);
+  const [entries, customers, projekte] = await Promise.all([listAvorEntries(), listCustomers(), listProjekte()]);
   const customerMap = new Map(customers.map(c => [c.id, c]));
+  const projektMap = new Map(projekte.map(p => [p.id, p]));
   const wrap = document.getElementById('table-wrap');
 
-  main.querySelector('#btn-new-avor').addEventListener('click', () => openNewEntryModal(uiLang, customers));
+  main.querySelector('#btn-new-avor').addEventListener('click', () => openNewEntryModal(uiLang, customers, projekte));
 
   if (!entries.length) {
     wrap.innerHTML = `<div class="empty-state"><div class="icon">🗒️</div>${A.emptyState}</div>`;
@@ -51,16 +54,17 @@ export async function renderAvorList() {
   wrap.innerHTML = `
     <table class="data">
       <thead><tr>
-        <th>${A.colKunde}</th><th>${A.colKommission}</th><th>${A.colCounts}</th><th>${A.colUpdated}</th><th></th>
+        <th>${A.colKunde}</th><th>${A.colProjekt}</th><th>${A.colCounts}</th><th>${A.colUpdated}</th><th></th>
       </tr></thead>
       <tbody>
         ${entries.map(e => {
           const c = customerMap.get(e.customerId);
+          const p = projektMap.get(e.projektId);
           const cnt = countMap.get(e.id) || { photos: 0, notes: 0 };
           return `
           <tr>
             <td><a href="#/avor/${e.id}" class="row-link">${c ? escapeHtml(c.firma || customerFullName(c)) : `<span class="text-muted">${A.noCustomerOptional}</span>`}</a></td>
-            <td>${escapeHtml(e.kommission || '')}</td>
+            <td>${escapeHtml(p ? p.name : (e.kommission || ''))}</td>
             <td class="text-muted">${A.countsLabel(cnt.photos, cnt.notes)}</td>
             <td>${new Date(e.updatedAt).toLocaleString(uiLang === 'fr' ? 'fr-CH' : 'de-CH')}</td>
             <td style="text-align:right"><button class="btn btn-sm" data-del="${e.id}">${tr(uiLang).common.delete}</button></td>
@@ -78,9 +82,11 @@ export async function renderAvorList() {
   }));
 }
 
-function openNewEntryModal(uiLang, customers) {
+function openNewEntryModal(uiLang, customers, projekte) {
   const A = tr(uiLang).avor;
   let selectedCustomerId = null;
+  let selectedProjektId = null;
+  const customerMap = new Map(customers.map(c => [c.id, c]));
   const close = openModal({
     title: A.newModalTitle,
     width: '520px',
@@ -94,8 +100,11 @@ function openNewEntryModal(uiLang, customers) {
           </div>
         </div>
         <div class="field">
-          <label>${A.fieldKommission}</label>
-          <input id="avor-kommission" placeholder="${A.kommissionPlaceholder}">
+          <label>${A.fieldProjekt}</label>
+          <div class="picker">
+            <input id="avor-projekt-search" placeholder="${A.projektSearchPlaceholder}" autocomplete="off">
+            <div id="avor-projekt-results" class="picker-results" style="display:none"></div>
+          </div>
         </div>
       </div>`,
     footerHtml: `
@@ -119,9 +128,23 @@ function openNewEntryModal(uiLang, customers) {
           results.style.display = 'none';
         }));
       }, 150));
+      attachPickerSearch({
+        input: root.querySelector('#avor-projekt-search'),
+        results: root.querySelector('#avor-projekt-results'),
+        items: projekte,
+        labelFn: (p) => escapeHtml(projektLabel(p, customerMap)),
+        matchFn: (p, term) => (p.name || '').toLowerCase().includes(term.toLowerCase()),
+        onSelect: (p) => { selectedProjektId = p.id; root.querySelector('#avor-projekt-search').value = projektLabel(p, customerMap); },
+        onCreate: async (name) => {
+          const created = await saveProjekt({ name, status: 'aktiv', customerId: selectedCustomerId || null });
+          projekte.push(created);
+          return created;
+        },
+        createLabel: A.createProjektOption,
+        emptyLabel: A.noProjektFound,
+      });
       root.querySelector('[data-save]').addEventListener('click', async () => {
-        const kommission = root.querySelector('#avor-kommission').value.trim();
-        const entry = await newAvorEntry({ customerId: selectedCustomerId, kommission });
+        const entry = await newAvorEntry({ customerId: selectedCustomerId, projektId: selectedProjektId });
         toast(A.createdToast, 'success');
         closeFn();
         navigate(`/avor/${entry.id}`);
@@ -135,7 +158,7 @@ export async function renderAvorDetail(id) {
   const main = document.getElementById('main');
   main.innerHTML = `<div class="empty-state">…</div>`;
 
-  const [entry, customers, settings] = await Promise.all([getAvorEntry(id), listCustomers(), loadSettings()]);
+  const [entry, customers, projekte, settings] = await Promise.all([getAvorEntry(id), listCustomers(), listProjekte(), loadSettings()]);
   const uiLang = settings.sprache || 'de';
   const A = tr(uiLang).avor;
   const AT = tr(uiLang).attachments;
@@ -146,13 +169,19 @@ export async function renderAvorDetail(id) {
   }
 
   const customerMap = new Map(customers.map(c => [c.id, c]));
+  const projektMap = new Map(projekte.map(p => [p.id, p]));
   let saveTimer = null;
+
+  const currentProjektName = () => {
+    const p = projektMap.get(entry.projektId);
+    return p ? p.name : (entry.kommission || '');
+  };
 
   main.innerHTML = `
     <div class="page-header">
       <div>
         <a href="#/avor" class="text-muted" style="font-size:13px;text-decoration:none">${A.backToList}</a>
-        <h1 style="margin-top:6px">${escapeHtml(entry.kommission || A.title)}</h1>
+        <h1 style="margin-top:6px">${escapeHtml(currentProjektName() || A.title)}</h1>
       </div>
       <div class="actions">
         <button class="btn btn-danger" id="btn-delete-entry">${tr(uiLang).common.delete}</button>
@@ -160,7 +189,7 @@ export async function renderAvorDetail(id) {
     </div>
 
     <div class="card">
-      <div class="card-header">${A.fieldKunde} &amp; ${A.fieldKommission}</div>
+      <div class="card-header">${A.fieldKunde} &amp; ${A.fieldProjekt}</div>
       <div class="card-body">
         <div class="form-grid">
           <div class="field">
@@ -172,8 +201,11 @@ export async function renderAvorDetail(id) {
             <div id="avor-customer-preview" style="margin-top:8px"></div>
           </div>
           <div class="field">
-            <label>${A.fieldKommission}</label>
-            <input id="avor-kommission" value="${escapeHtml(entry.kommission || '')}" placeholder="${A.kommissionPlaceholder}">
+            <label>${A.fieldProjekt}</label>
+            <div class="picker">
+              <input id="avor-projekt-search" placeholder="${A.projektSearchPlaceholder}" value="${entry.projektId && projektMap.has(entry.projektId) ? escapeHtml(projektLabel(projektMap.get(entry.projektId), customerMap)) : escapeHtml(entry.kommission || '')}" autocomplete="off">
+              <div id="avor-projekt-results" class="picker-results" style="display:none"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -242,10 +274,26 @@ export async function renderAvorDetail(id) {
     box.innerHTML = `<div style="font-size:13px;color:var(--ink-soft);line-height:1.5">${customerAddressLines(c).map(l => escapeHtml(l)).join('<br>')}</div>`;
   }
 
-  main.querySelector('#avor-kommission').addEventListener('input', (e) => {
-    entry.kommission = e.target.value;
-    main.querySelector('h1').textContent = entry.kommission || A.title;
-    queueSave();
+  attachPickerSearch({
+    input: main.querySelector('#avor-projekt-search'),
+    results: main.querySelector('#avor-projekt-results'),
+    items: projekte,
+    labelFn: (p) => escapeHtml(projektLabel(p, customerMap)),
+    matchFn: (p, term) => (p.name || '').toLowerCase().includes(term.toLowerCase()),
+    onSelect: (p) => {
+      entry.projektId = p.id;
+      main.querySelector('#avor-projekt-search').value = projektLabel(p, customerMap);
+      main.querySelector('h1').textContent = currentProjektName() || A.title;
+      queueSave();
+    },
+    onCreate: async (name) => {
+      const created = await saveProjekt({ name, status: 'aktiv', customerId: entry.customerId || null });
+      projekte.push(created);
+      projektMap.set(created.id, created);
+      return created;
+    },
+    createLabel: A.createProjektOption,
+    emptyLabel: A.noProjektFound,
   });
 
   main.querySelector('#btn-delete-entry').addEventListener('click', async () => {

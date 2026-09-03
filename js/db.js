@@ -14,7 +14,7 @@ import {
   writeBatch,
 } from 'https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js';
 
-const STORES = ['customers', 'articles', 'services', 'documents', 'settings', 'photos', 'notes', 'avor', 'termine'];
+const STORES = ['customers', 'articles', 'services', 'documents', 'settings', 'photos', 'notes', 'avor', 'termine', 'projekte', 'ausgaben'];
 const BATCH_CHUNK = 450; // unter dem Firestore-Limit von 500 Schreib-/Löschvorgängen pro Batch
 
 export function uid() {

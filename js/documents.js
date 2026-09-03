@@ -37,6 +37,7 @@ export function newOfferte({ number, customerId, lang = 'de' }) {
     parentId: null,
     customerId: customerId || null,
     projekt: '',
+    projektId: null,
     datum: today,
     gueltigBis: '',
     lieferfrist: D.lieferfrist,

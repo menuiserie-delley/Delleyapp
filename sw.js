@@ -3,7 +3,7 @@
 // Alle Daten (Kunden, Offerten, Fotos, Notizen) liegen in IndexedDB, nicht hier —
 // dieser Cache betrifft nur die App-Dateien selbst (HTML/JS/CSS/Icons).
 
-const CACHE_VERSION = 'delley-v8';
+const CACHE_VERSION = 'delley-v9';
 const FIREBASE_SDK_VERSION = '12.17.1';
 const CORE_ASSETS = [
   './',
@@ -20,6 +20,9 @@ const CORE_ASSETS = [
   './js/catalog.js',
   './js/avor.js',
   './js/termine.js',
+  './js/projekte.js',
+  './js/ausgaben.js',
+  './js/picker.js',
   './js/attachments.js',
   './js/bookingRequests.js',
   './js/notifications.js',
@@ -38,6 +41,8 @@ const CORE_ASSETS = [
   './js/views/avor.js',
   './js/views/kalender.js',
   './js/views/einstellungen.js',
+  './js/views/projekte.js',
+  './js/views/ausgaben.js',
   './assets/logo.png',
   './assets/logo-full-white.png',
   './assets/logo-mark-white.png',

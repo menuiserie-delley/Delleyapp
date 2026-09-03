@@ -9,7 +9,7 @@ export async function getTermin(id) {
   return getOne('termine', id);
 }
 
-export async function newTermin({ titel, datum, von, bis, ort, customerId, kommission, notiz }) {
+export async function newTermin({ titel, datum, von, bis, ort, customerId, projektId, kommission, notiz }) {
   const now = new Date().toISOString();
   const termin = {
     id: uid(),
@@ -19,6 +19,7 @@ export async function newTermin({ titel, datum, von, bis, ort, customerId, kommi
     bis: bis || '',
     ort: ort || '',
     customerId: customerId || null,
+    projektId: projektId || null,
     kommission: kommission || '',
     notiz: notiz || '',
     createdAt: now,

@@ -10,11 +10,12 @@ export async function getAvorEntry(id) {
   return getOne('avor', id);
 }
 
-export async function newAvorEntry({ customerId, kommission }) {
+export async function newAvorEntry({ customerId, projektId, kommission }) {
   const now = new Date().toISOString();
   const entry = {
     id: uid(),
     customerId: customerId || null,
+    projektId: projektId || null,
     kommission: kommission || '',
     createdAt: now,
     updatedAt: now,

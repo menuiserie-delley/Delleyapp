@@ -4,11 +4,13 @@ import {
   emptyItem, emptyGroupHeader, lineTotal, computeTotals, withPositionNumbers,
 } from '../documents.js';
 import { listCustomers } from '../customers.js';
+import { listProjekte, saveProjekt, projektLabel } from '../projekte.js';
 import { listCatalog } from '../catalog.js';
 import { loadSettings } from '../settings.js';
 import { escapeHtml, nl2br, chf, num, todayISO, formatDateDE, addDays, customerFullName, customerAddressLines, debounce } from '../utils.js';
 import { openModal, confirmDialog, toast } from '../ui.js';
 import { navigate } from '../router.js';
+import { attachPickerSearch } from '../picker.js';
 import { generateDocumentPdf } from '../pdf.js';
 import { sendDocumentMail } from '../mail.js';
 import { tr, resolveText } from '../i18n.js';
@@ -44,8 +46,9 @@ export async function renderDocumentList(stage) {
     main.querySelector('#btn-new').addEventListener('click', createOfferte);
   }
 
-  const [docs, customers] = await Promise.all([listDocuments(stage), listCustomers()]);
+  const [docs, customers, projekte] = await Promise.all([listDocuments(stage), listCustomers(), listProjekte()]);
   const customerMap = new Map(customers.map(c => [c.id, c]));
+  const projektMap = new Map(projekte.map(p => [p.id, p]));
   const wrap = document.getElementById('table-wrap');
 
   if (docs.length === 0) {
@@ -62,11 +65,12 @@ export async function renderDocumentList(stage) {
         ${docs.map(d => {
           const totals = computeTotals(d, settings.mwstSatz);
           const c = customerMap.get(d.customerId);
+          const p = projektMap.get(d.projektId);
           return `
           <tr>
             <td><a href="#/${routeOf(stage)}/${d.id}" class="row-link">${escapeHtml(d.number)}</a></td>
             <td>${c ? escapeHtml(c.firma || customerFullName(c)) : `<span class="text-muted">${T.noCustomer}</span>`}</td>
-            <td>${escapeHtml(d.projekt || '')}</td>
+            <td>${escapeHtml(p ? p.name : (d.projekt || ''))}</td>
             <td>${formatDateDE(d.datum)}</td>
             <td class="num">${chf(totals.total)}</td>
             <td><span class="badge badge-${d.status}">${statusLabel(uiLang, stage, d.status)}</span></td>
@@ -109,8 +113,8 @@ export async function renderDocumentDetail(stage, id) {
   const main = document.getElementById('main');
   main.innerHTML = `<div class="empty-state">…</div>`;
 
-  const [doc, customers, articles, services, settings] = await Promise.all([
-    getDocument(id), listCustomers(), listCatalog('articles'), listCatalog('services'), loadSettings(),
+  const [doc, customers, projekte, articles, services, settings] = await Promise.all([
+    getDocument(id), listCustomers(), listProjekte(), listCatalog('articles'), listCatalog('services'), loadSettings(),
   ]);
 
   const uiLang = settings.sprache || 'de';
@@ -135,6 +139,8 @@ export async function renderDocumentDetail(stage, id) {
 
   const STATUS_OPTIONS = statusOptions(uiLang);
   const customerMap = new Map(customers.map(c => [c.id, c]));
+  const projektMap = new Map(projekte.map(p => [p.id, p]));
+  let selectedProjektId = doc.projektId || null;
   let saveTimer = null;
 
   const [childNext, childOfferte, childAb] = await Promise.all([
@@ -217,6 +223,28 @@ export async function renderDocumentDetail(stage, id) {
   renderItems();
   renderTotals();
 
+  attachPickerSearch({
+    input: main.querySelector('#doc-projekt-search'),
+    results: main.querySelector('#doc-projekt-results'),
+    items: projekte,
+    labelFn: (p) => escapeHtml(projektLabel(p, customerMap)),
+    matchFn: (p, term) => (p.name || '').toLowerCase().includes(term.toLowerCase()),
+    onSelect: (p) => {
+      selectedProjektId = p.id;
+      doc.projektId = p.id;
+      main.querySelector('#doc-projekt-search').value = projektLabel(p, customerMap);
+      queueSave();
+    },
+    onCreate: async (name) => {
+      const created = await saveProjekt({ name, status: 'aktiv', customerId: doc.customerId || null });
+      projekte.push(created);
+      projektMap.set(created.id, created);
+      return created;
+    },
+    createLabel: T.createProjektOption,
+    emptyLabel: T.noProjektFound,
+  });
+
   // --- Kunde ---
   const custInput = main.querySelector('#customer-search');
   const custResults = main.querySelector('#customer-results');
@@ -257,7 +285,13 @@ export async function renderDocumentDetail(stage, id) {
   function renderMetaFields() {
     const box = main.querySelector('#meta-fields');
     const rows = [];
-    rows.push(field(T.fieldProjekt, 'projekt', doc.projekt || '', 'text'));
+    rows.push(`<div class="field span-2">
+      <label>${T.fieldProjekt}</label>
+      <div class="picker">
+        <input id="doc-projekt-search" placeholder="${T.projektSearchPlaceholder}" value="${selectedProjektId && projektMap.has(selectedProjektId) ? escapeHtml(projektLabel(projektMap.get(selectedProjektId), customerMap)) : escapeHtml(doc.projekt || '')}" autocomplete="off">
+        <div id="doc-projekt-results" class="picker-results" style="display:none"></div>
+      </div>
+    </div>`);
     rows.push(field(T.fieldDatum[stage], 'datum', doc.datum || todayISO(), 'date'));
     if (stage === 'offerte') {
       rows.push(field(T.fieldGueltigBis, 'gueltigBis', doc.gueltigBis || addDays(doc.datum || todayISO(), settings.gueltigkeitTage), 'date'));
@@ -416,7 +450,8 @@ export async function renderDocumentDetail(stage, id) {
   });
   main.querySelector('#btn-pdf').addEventListener('click', async () => {
     await flushSave();
-    await generateDocumentPdf(doc, customerMap.get(doc.customerId), settings, stage, { download: true });
+    const projekt = projektMap.get(doc.projektId);
+    await generateDocumentPdf({ ...doc, projektName: projekt ? projekt.name : doc.projekt }, customerMap.get(doc.customerId), settings, stage, { download: true });
     toast(uiLang === 'fr' ? 'PDF créé et téléchargé' : 'PDF erstellt und heruntergeladen', 'success');
   });
   main.querySelector('#btn-mail').addEventListener('click', async () => {

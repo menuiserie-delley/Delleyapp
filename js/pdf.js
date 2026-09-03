@@ -154,10 +154,11 @@ export async function buildDocumentPdf(doc, customer, settings, stage) {
     pdf.text(lines, MARGIN_L, y);
     y += lines.length * 4.6 + 4.5;
   }
-  if (doc.projekt) {
+  const projektText = doc.projektName || doc.projekt;
+  if (projektText) {
     ensureSpace(7);
     pdf.setFont('helvetica', 'bold');
-    pdf.text(T.kommission(doc.projekt), MARGIN_L, y);
+    pdf.text(T.kommission(projektText), MARGIN_L, y);
     pdf.setFont('helvetica', 'normal');
     y += 8;
   }

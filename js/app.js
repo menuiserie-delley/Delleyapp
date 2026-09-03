@@ -1,6 +1,8 @@
 import { route, startRouter } from './router.js';
 import { renderDashboard } from './views/dashboard.js';
 import { renderKundenList } from './views/kunden.js';
+import { renderProjekteList, renderProjektDetail } from './views/projekte.js';
+import { renderAusgabenList } from './views/ausgaben.js';
 import { renderCatalogList } from './views/katalog.js';
 import { renderDocumentList, renderDocumentDetail } from './views/dokumente.js';
 import { renderAvorList, renderAvorDetail } from './views/avor.js';
@@ -26,8 +28,10 @@ async function initSidebar() {
   document.getElementById('nav-avor').textContent = N.avor;
   document.getElementById('nav-section-master').textContent = N.sectionMaster;
   document.getElementById('nav-kunden').textContent = N.kunden;
+  document.getElementById('nav-projekte').textContent = N.projekte;
   document.getElementById('nav-artikel').textContent = N.artikel;
   document.getElementById('nav-dienstleistungen').textContent = N.dienstleistungen;
+  document.getElementById('nav-ausgaben').textContent = N.ausgaben;
   document.getElementById('nav-section-admin').textContent = N.sectionAdmin;
   document.getElementById('nav-einstellungen').textContent = N.einstellungen;
   document.getElementById('nav-data-note').textContent = N.dataNote;
@@ -41,11 +45,13 @@ async function initSidebar() {
 
   // "Mehr"-Sheet (volle Labels)
   document.getElementById('nav-m2-kalender').textContent = N.kalender;
+  document.getElementById('nav-m2-projekte').textContent = N.projekte;
   document.getElementById('nav-m2-offerten').textContent = N.offerten;
   document.getElementById('nav-m2-auftragsbestaetigungen').textContent = N.auftragsbestaetigungen;
   document.getElementById('nav-m2-rechnungen').textContent = N.rechnungen;
   document.getElementById('nav-m2-artikel').textContent = N.artikel;
   document.getElementById('nav-m2-dienstleistungen').textContent = N.dienstleistungen;
+  document.getElementById('nav-m2-ausgaben').textContent = N.ausgaben;
   document.getElementById('nav-m2-einstellungen').textContent = N.einstellungen;
 
   async function setLang(newLang) {
@@ -73,8 +79,11 @@ async function initSidebar() {
 route('/dashboard', renderDashboard);
 route('/kalender', renderKalender);
 route('/kunden', renderKundenList);
+route('/projekte', renderProjekteList);
+route('/projekte/:id', ({ id }) => renderProjektDetail(id));
 route('/artikel', () => renderCatalogList('articles'));
 route('/dienstleistungen', () => renderCatalogList('services'));
+route('/ausgaben', renderAusgabenList);
 
 route('/offerten', () => renderDocumentList('offerte'));
 route('/offerten/:id', ({ id }) => renderDocumentDetail('offerte', id));

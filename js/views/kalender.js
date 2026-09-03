@@ -1,10 +1,12 @@
 import { listTermine, getTermin, newTermin, saveTermin, deleteTermin } from '../termine.js';
 import { listCustomers } from '../customers.js';
+import { listProjekte, saveProjekt, projektLabel } from '../projekte.js';
 import { listBookingRequests, deleteBookingRequest } from '../bookingRequests.js';
 import { openCustomerForm } from './kunden.js';
 import { loadSettings } from '../settings.js';
 import { escapeHtml, customerFullName, debounce, todayISO, formatDateDE } from '../utils.js';
 import { openModal, confirmDialog, toast } from '../ui.js';
+import { attachPickerSearch } from '../picker.js';
 import { tr } from '../i18n.js';
 
 function customerLabel(c) {
@@ -50,8 +52,9 @@ export async function renderKalender() {
   const uiLang = settings.sprache || 'de';
   const K = tr(uiLang).kalender;
 
-  const [termine, customers, bookingRequests] = await Promise.all([listTermine(), listCustomers(), listBookingRequests()]);
+  const [termine, customers, projekte, bookingRequests] = await Promise.all([listTermine(), listCustomers(), listProjekte(), listBookingRequests()]);
   const customerMap = new Map(customers.map(c => [c.id, c]));
+  const projektMap = new Map(projekte.map(p => [p.id, p]));
 
   const now = new Date();
   let viewYear = now.getFullYear();
@@ -131,7 +134,9 @@ export async function renderKalender() {
       ${items.length ? `<div class="notes-list">
         ${items.map(t => {
           const c = customerMap.get(t.customerId);
-          const meta = [c ? (c.firma || customerFullName(c)) : '', t.kommission].filter(Boolean).join(' · ');
+          const p = projektMap.get(t.projektId);
+          const projektName = p ? p.name : t.kommission;
+          const meta = [c ? (c.firma || customerFullName(c)) : '', projektName].filter(Boolean).join(' · ');
           const time = [t.von, t.bis].filter(Boolean).join('–');
           return `<div class="note-item" data-open="${t.id}" style="cursor:pointer">
             <div>
@@ -300,7 +305,7 @@ export async function renderKalender() {
   }
 
   function openTerminModal(id) {
-    openTerminEditor(uiLang, customers, customerMap, id, selectedDate, async () => { await refreshData(); });
+    openTerminEditor(uiLang, customers, customerMap, projekte, projektMap, id, selectedDate, async () => { await refreshData(); });
   }
 
   document.getElementById('btn-new-termin').addEventListener('click', () => openTerminModal(null));
@@ -328,11 +333,12 @@ export async function renderKalender() {
   renderDayList();
 }
 
-async function openTerminEditor(uiLang, customers, customerMap, id, prefillDate, onSaved) {
+async function openTerminEditor(uiLang, customers, customerMap, projekte, projektMap, id, prefillDate, onSaved) {
   const K = tr(uiLang).kalender;
   const termin = id ? await getTermin(id) : null;
   const isEdit = !!termin;
   let selectedCustomerId = termin?.customerId || null;
+  let selectedProjektId = termin?.projektId || null;
 
   openModal({
     title: isEdit ? K.editModalTitle : K.newModalTitle,
@@ -367,8 +373,11 @@ async function openTerminEditor(uiLang, customers, customerMap, id, prefillDate,
           </div>
         </div>
         <div class="field span-2">
-          <label>${K.fieldKommission}</label>
-          <input id="t-kommission" placeholder="${K.kommissionPlaceholder}" value="${escapeHtml(termin?.kommission || '')}">
+          <label>${K.fieldProjekt}</label>
+          <div class="picker">
+            <input id="t-projekt-search" placeholder="${K.projektSearchPlaceholder}" value="${selectedProjektId && projektMap.has(selectedProjektId) ? escapeHtml(projektLabel(projektMap.get(selectedProjektId), customerMap)) : escapeHtml(termin?.kommission || '')}" autocomplete="off">
+            <div id="t-projekt-results" class="picker-results" style="display:none"></div>
+          </div>
         </div>
         <div class="field span-2">
           <label>${K.fieldNotiz}</label>
@@ -399,6 +408,23 @@ async function openTerminEditor(uiLang, customers, customerMap, id, prefillDate,
         }));
       }, 150));
 
+      attachPickerSearch({
+        input: root.querySelector('#t-projekt-search'),
+        results: root.querySelector('#t-projekt-results'),
+        items: projekte,
+        labelFn: (p) => escapeHtml(projektLabel(p, customerMap)),
+        matchFn: (p, term) => (p.name || '').toLowerCase().includes(term.toLowerCase()),
+        onSelect: (p) => { selectedProjektId = p.id; root.querySelector('#t-projekt-search').value = projektLabel(p, customerMap); },
+        onCreate: async (name) => {
+          const created = await saveProjekt({ name, status: 'aktiv', customerId: selectedCustomerId || null });
+          projekte.push(created);
+          projektMap.set(created.id, created);
+          return created;
+        },
+        createLabel: K.createProjektOption,
+        emptyLabel: K.noProjektFound,
+      });
+
       if (isEdit) {
         root.querySelector('[data-delete]').addEventListener('click', async () => {
           const ok = await confirmDialog(K.deleteConfirm, { lang: uiLang });
@@ -418,7 +444,7 @@ async function openTerminEditor(uiLang, customers, customerMap, id, prefillDate,
           bis: root.querySelector('#t-bis').value,
           ort: root.querySelector('#t-ort').value.trim(),
           customerId: selectedCustomerId,
-          kommission: root.querySelector('#t-kommission').value.trim(),
+          projektId: selectedProjektId,
           notiz: root.querySelector('#t-notiz').value.trim(),
         };
         if (isEdit) {
