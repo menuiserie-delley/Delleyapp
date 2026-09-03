@@ -1,4 +1,5 @@
 import { getAll, put, remove, uid } from './db.js';
+import { listBelege, deleteBeleg } from './attachments.js';
 
 export async function listAusgaben() {
   const all = await getAll('ausgaben');
@@ -20,5 +21,7 @@ export async function saveAusgabe(ausgabe) {
 }
 
 export async function deleteAusgabe(id) {
+  const belege = await listBelege(id);
+  await Promise.all(belege.map(b => deleteBeleg(b.id)));
   await remove('ausgaben', id);
 }

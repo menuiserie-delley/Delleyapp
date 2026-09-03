@@ -20,8 +20,25 @@ export function emptyGroupHeader(title = '') {
 export async function nextDocumentNumber() {
   const settings = await loadSettings();
   const year = new Date().getFullYear();
-  const number = `${year}-${settings.naechsteNummer}`;
-  settings.naechsteNummer = Number(settings.naechsteNummer) + 1;
+  const prefix = `${year}-`;
+
+  // Der gespeicherte Zähler kann hinter der Realität zurückfallen (z. B. wenn eine andere
+  // Ansicht — etwa die Einstellungen-Seite oder der Sprachumschalter — ein älteres,
+  // im Speicher gehaltenes settings-Objekt komplett zurückschreibt und so einen zwischenzeitlich
+  // erhöhten Zähler überschreibt). Darum hier zusätzlich den echten Höchstwert aus den
+  // bestehenden Dokumenten ermitteln und nie eine bereits vergebene Nummer wiederverwenden.
+  const existingDocs = await getAll('documents');
+  let maxExisting = 0;
+  for (const doc of existingDocs) {
+    if (typeof doc.number === 'string' && doc.number.startsWith(prefix)) {
+      const seq = Number(doc.number.slice(prefix.length));
+      if (Number.isFinite(seq) && seq > maxExisting) maxExisting = seq;
+    }
+  }
+
+  const seq = Math.max(Number(settings.naechsteNummer) || 0, maxExisting + 1);
+  const number = `${year}-${seq}`;
+  settings.naechsteNummer = seq + 1;
   await saveSettings(settings);
   return number;
 }

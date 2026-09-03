@@ -1,6 +1,7 @@
 import { listAusgaben, saveAusgabe, deleteAusgabe } from '../ausgaben.js';
 import { listProjekte, saveProjekt, projektLabel } from '../projekte.js';
 import { listCustomers } from '../customers.js';
+import { listBelege, addBeleg, deleteBeleg, BelegTooLargeError } from '../attachments.js';
 import { loadSettings } from '../settings.js';
 import { escapeHtml, chf, todayISO, formatDateDE } from '../utils.js';
 import { openModal, confirmDialog, toast } from '../ui.js';
@@ -108,7 +109,15 @@ function openAusgabeForm(lang, ausgabe, projekte, customerMap, onSaved) {
             </div>
           </div>
         </div>
-      </form>`,
+      </form>
+      <div class="card-header" style="padding:0;margin:18px 0 8px;border:none;font-weight:600">${T.cardBeleg}</div>
+      ${ausgabe ? `
+        <div id="beleg-dropzone" class="dropzone">
+          <div class="dropzone-hint">${T.belegDropHint}</div>
+          <input type="file" id="beleg-input" accept="image/*,application/pdf" multiple style="display:none">
+        </div>
+        <div id="beleg-list" style="margin-top:10px"></div>
+      ` : `<p class="text-muted" style="font-size:13px;margin:0">${T.saveFirstHint}</p>`}`,
     footerHtml: `
       ${ausgabe ? `<button class="btn btn-danger" data-delete style="margin-right:auto">${tr(lang).common.delete}</button>` : ''}
       <button class="btn" data-cancel>${tr(lang).common.cancel}</button>
@@ -131,7 +140,75 @@ function openAusgabeForm(lang, ausgabe, projekte, customerMap, onSaved) {
         createLabel: T.createProjektOption,
         emptyLabel: T.noProjektFound,
       });
+
       if (ausgabe) {
+        const dropzone = root.querySelector('#beleg-dropzone');
+        const belegInput = root.querySelector('#beleg-input');
+        dropzone.addEventListener('click', () => belegInput.click());
+        dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+        dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+        dropzone.addEventListener('drop', async (e) => {
+          e.preventDefault();
+          dropzone.classList.remove('drag-over');
+          await handleBelegFiles(Array.from(e.dataTransfer.files || []));
+        });
+        belegInput.addEventListener('change', async () => {
+          await handleBelegFiles(Array.from(belegInput.files || []));
+          belegInput.value = '';
+        });
+
+        async function handleBelegFiles(files) {
+          let addedCount = 0;
+          for (const file of files) {
+            try {
+              await addBeleg(a.id, file);
+              addedCount += 1;
+            } catch (err) {
+              if (err instanceof BelegTooLargeError) toast(T.belegTooLargeError, 'error');
+              else throw err;
+            }
+          }
+          if (addedCount) toast(T.belegAddedToast, 'success');
+          renderBelege();
+        }
+
+        async function renderBelege() {
+          const box = root.querySelector('#beleg-list');
+          if (!box) return;
+          const belege = await listBelege(a.id);
+          if (!belege.length) {
+            box.innerHTML = `<div class="text-muted" style="font-size:13px">${T.noBelege}</div>`;
+            return;
+          }
+          box.innerHTML = belege.map((b) => b.mime === 'application/pdf'
+            ? `<div class="note-item">
+                <div class="note-text">📄 ${escapeHtml(b.filename)}</div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <a href="${b.dataUrl}" target="_blank" rel="noopener" class="btn btn-sm">${T.belegOpenLabel}</a>
+                  <button class="btn btn-sm" data-del-beleg="${b.id}">${tr(lang).common.delete}</button>
+                </div>
+              </div>`
+            : `<div class="photo-thumb" data-open-beleg="${b.id}" style="display:inline-block;margin:0 8px 8px 0">
+                <img src="${b.dataUrl}" alt="" style="width:90px;height:90px;object-fit:cover;border-radius:6px">
+                <button class="photo-del" data-del-beleg="${b.id}" title="${tr(lang).common.delete}">✕</button>
+              </div>`).join('');
+          box.querySelectorAll('[data-open-beleg]').forEach((el) => el.addEventListener('click', (e) => {
+            if (e.target.closest('[data-del-beleg]')) return;
+            const b = belege.find((x) => x.id === el.dataset.openBeleg);
+            if (b) window.open(b.dataUrl, '_blank', 'noopener');
+          }));
+          // Kein confirmDialog hier: der teilt sich #modal-root mit diesem Formular-Modal
+          // und würde es beim Öffnen/Schliessen unterbrechen. Ein Beleg ist unkritisch
+          // (jederzeit neu hochladbar) — daher direktes Löschen ohne Rückfrage.
+          box.querySelectorAll('[data-del-beleg]').forEach((el) => el.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            await deleteBeleg(el.dataset.delBeleg);
+            toast(T.belegDeletedToast);
+            renderBelege();
+          }));
+        }
+        renderBelege();
+
         root.querySelector('[data-delete]').addEventListener('click', async () => {
           const ok = await confirmDialog(T.deleteConfirm, { lang });
           if (!ok) return;
