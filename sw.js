@@ -3,7 +3,7 @@
 // Alle Daten (Kunden, Offerten, Fotos, Notizen) liegen in IndexedDB, nicht hier —
 // dieser Cache betrifft nur die App-Dateien selbst (HTML/JS/CSS/Icons).
 
-const CACHE_VERSION = 'delley-v11';
+const CACHE_VERSION = 'delley-v12';
 const FIREBASE_SDK_VERSION = '12.17.1';
 const CORE_ASSETS = [
   './',
@@ -22,6 +22,7 @@ const CORE_ASSETS = [
   './js/termine.js',
   './js/projekte.js',
   './js/ausgaben.js',
+  './js/buchhaltung.js',
   './js/picker.js',
   './js/attachments.js',
   './js/bookingRequests.js',

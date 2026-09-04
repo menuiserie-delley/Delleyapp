@@ -2,6 +2,7 @@ import { loadSettings, saveSettings } from '../settings.js';
 import { exportAll, importAll } from '../db.js';
 import { bulkImportCatalog } from '../catalog.js';
 import { migrateLegacyPhotosInDump } from '../attachments.js';
+import { buildBuchhaltungsCsv } from '../buchhaltung.js';
 import { logout } from '../auth.js';
 import { escapeHtml } from '../utils.js';
 import { toast, confirmDialog } from '../ui.js';
@@ -66,6 +67,17 @@ export async function renderEinstellungen() {
             ${T.btnImport}
             <input type="file" id="import-file" accept="application/json" style="display:none">
           </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">${T.cardBuchhaltung}</div>
+      <div class="card-body">
+        <p style="margin-top:0">${T.buchhaltungIntro}</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <select id="buchhaltung-jahr"></select>
+          <button class="btn btn-primary" id="btn-buchhaltung-export">${T.btnBuchhaltungExport}</button>
         </div>
       </div>
     </div>
@@ -199,6 +211,23 @@ export async function renderEinstellungen() {
     } catch (err) {
       toast(T.importError(err.message), 'error');
     }
+  });
+
+  const jahrSelect = main.querySelector('#buchhaltung-jahr');
+  const currentYear = new Date().getFullYear();
+  jahrSelect.innerHTML = Array.from({ length: 6 }, (_, i) => currentYear - i)
+    .map(y => `<option value="${y}">${y}</option>`).join('');
+  main.querySelector('#btn-buchhaltung-export').addEventListener('click', async () => {
+    const year = Number(jahrSelect.value);
+    const csv = await buildBuchhaltungsCsv(year);
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `buchhaltung-${year}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast(T.buchhaltungExportedToast, 'success');
   });
 
   function renderNotifCard() {

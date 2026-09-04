@@ -243,7 +243,7 @@ export async function renderProjektDetail(id) {
     box.innerHTML = `<div class="notes-list">${ausgaben.map(a => `
       <div class="note-item">
         <div>
-          <div class="note-date">${formatDateDE(a.datum)}</div>
+          <div class="note-date">${formatDateDE(a.datum)}${a.belegnummer ? ` · ${escapeHtml(a.belegnummer)}` : ''}</div>
           <div class="note-text">${escapeHtml(a.beschreibung || '')}</div>
         </div>
         <div style="display:flex;align-items:center;gap:10px">

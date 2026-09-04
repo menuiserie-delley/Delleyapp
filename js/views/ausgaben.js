@@ -45,11 +45,12 @@ export async function renderAusgabenList() {
     const total = all.reduce((s, a) => s + (Number(a.betrag) || 0), 0);
     wrap.innerHTML = `
       <table class="data">
-        <thead><tr><th>${T.colDatum}</th><th>${T.colBeschreibung}</th><th>${T.colProjekt}</th><th class="num">${T.colBetrag}</th><th></th></tr></thead>
+        <thead><tr><th>${T.colBelegnummer}</th><th>${T.colDatum}</th><th>${T.colBeschreibung}</th><th>${T.colProjekt}</th><th class="num">${T.colBetrag}</th><th></th></tr></thead>
         <tbody>
           ${all.map(a => {
             const p = projektMap.get(a.projektId);
             return `<tr>
+              <td class="text-muted">${escapeHtml(a.belegnummer || '')}</td>
               <td>${formatDateDE(a.datum)}</td>
               <td><a href="#" class="row-link" data-edit="${a.id}">${escapeHtml(a.beschreibung || '')}</a></td>
               <td>${p ? `<a href="#/projekte/${p.id}" class="row-link">${escapeHtml(p.name)}</a>` : `<span class="text-muted">${T.noProjektLinked}</span>`}</td>
@@ -59,7 +60,7 @@ export async function renderAusgabenList() {
           }).join('')}
         </tbody>
         <tfoot>
-          <tr><td colspan="3" style="text-align:right;font-weight:600">${T.totalLabel}</td><td class="num" style="font-weight:600">${chf(total)}</td><td></td></tr>
+          <tr><td colspan="4" style="text-align:right;font-weight:600">${T.totalLabel}</td><td class="num" style="font-weight:600">${chf(total)}</td><td></td></tr>
         </tfoot>
       </table>`;
     wrap.querySelectorAll('[data-edit]').forEach(el => el.addEventListener('click', (e) => {
@@ -87,6 +88,7 @@ function openAusgabeForm(lang, ausgabe, projekte, customerMap, onSaved) {
     title: ausgabe ? T.modalEditTitle : T.modalNewTitle,
     width: '520px',
     bodyHtml: `
+      ${ausgabe && ausgabe.belegnummer ? `<p class="text-muted" style="font-size:12.5px;margin:0 0 14px">${T.fieldBelegnummer}: <strong>${escapeHtml(ausgabe.belegnummer)}</strong></p>` : ''}
       <form id="ausgabe-form">
         <div class="form-grid">
           <div class="field">
