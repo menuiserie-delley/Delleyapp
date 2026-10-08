@@ -3,7 +3,7 @@
 // Alle Daten (Kunden, Offerten, Fotos, Notizen) liegen in IndexedDB, nicht hier —
 // dieser Cache betrifft nur die App-Dateien selbst (HTML/JS/CSS/Icons).
 
-const CACHE_VERSION = 'delley-v12';
+const CACHE_VERSION = 'delley-v13';
 const FIREBASE_SDK_VERSION = '12.17.1';
 const CORE_ASSETS = [
   './',
@@ -52,6 +52,7 @@ const CORE_ASSETS = [
   './assets/apple-touch-icon.png',
   './vendor/jspdf.umd.min.js',
   './vendor/qrcode-generator.js',
+  './vendor/xlsx.mini.min.js',
   `https://www.gstatic.com/firebasejs/${FIREBASE_SDK_VERSION}/firebase-app.js`,
   `https://www.gstatic.com/firebasejs/${FIREBASE_SDK_VERSION}/firebase-auth.js`,
   `https://www.gstatic.com/firebasejs/${FIREBASE_SDK_VERSION}/firebase-firestore.js`,

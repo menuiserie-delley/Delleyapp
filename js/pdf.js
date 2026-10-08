@@ -237,13 +237,17 @@ export async function buildDocumentPdf(doc, customer, settings, stage) {
   pdf.setLineWidth(0.5);
   pdf.line(boxX, y, boxX + boxW, y);
   y += 5.5;
-  totalRow(T.totalExkl, totals.subtotal, false);
-  totalRow(T.totalMwst(formatPercent(settings.mwstSatz)), totals.mwst, false);
-  y += 1;
-  pdf.setDrawColor(220, 220, 220);
-  pdf.line(boxX, y, boxX + boxW, y);
-  y += 5.5;
-  totalRow(T.totalInkl, totals.total, true);
+  if (doc.mwstAktiv === false) {
+    totalRow(T.totalOhneMwst, totals.total, true);
+  } else {
+    totalRow(T.totalExkl, totals.subtotal, false);
+    totalRow(T.totalMwst(formatPercent(settings.mwstSatz)), totals.mwst, false);
+    y += 1;
+    pdf.setDrawColor(220, 220, 220);
+    pdf.line(boxX, y, boxX + boxW, y);
+    y += 5.5;
+    totalRow(T.totalInkl, totals.total, true);
+  }
   y += 6;
 
   function totalRow(label, value, bold) {

@@ -199,7 +199,10 @@ export async function renderDocumentDetail(stage, id) {
             <button class="btn btn-sm" id="btn-apply-discount">${T.bulkDiscountApply}</button>
           </div>
         </div>
-        <div class="totals-box" id="totals-box"></div>
+        <div style="display:flex;justify-content:flex-end;margin-top:14px">
+          <button class="btn btn-sm" type="button" id="btn-mwst"></button>
+        </div>
+        <div class="totals-box" id="totals-box" style="margin-top:8px"></div>
       </div>
     </div>
 
@@ -410,12 +413,25 @@ export async function renderDocumentDetail(stage, id) {
 
   function renderTotals() {
     const totals = computeTotals(doc, settings.mwstSatz);
-    main.querySelector('#totals-box').innerHTML = `
+    const mwstOn = doc.mwstAktiv !== false;
+    const mwstBtn = main.querySelector('#btn-mwst');
+    mwstBtn.textContent = mwstOn ? T.mwstOn(num(settings.mwstSatz, 1)) : T.mwstOff;
+    mwstBtn.classList.toggle('btn-primary', mwstOn);
+    mwstBtn.setAttribute('aria-pressed', String(mwstOn));
+    main.querySelector('#totals-box').innerHTML = mwstOn ? `
       <div class="row"><span>${T.totalExkl}</span><span>${chf(totals.subtotal)}</span></div>
       <div class="row"><span>${T.totalMwst(num(settings.mwstSatz, 1))}</span><span>${chf(totals.mwst)}</span></div>
       <div class="row grand"><span>${T.totalInkl}</span><span>${chf(totals.total)}</span></div>
+    ` : `
+      <div class="row grand"><span>${T.totalOhneMwst}</span><span>${chf(totals.total)}</span></div>
     `;
   }
+
+  main.querySelector('#btn-mwst').addEventListener('click', () => {
+    doc.mwstAktiv = doc.mwstAktiv === false;
+    renderTotals();
+    queueSave();
+  });
 
   main.querySelector('#btn-add-group').addEventListener('click', () => {
     doc.items.push(emptyGroupHeader(''));

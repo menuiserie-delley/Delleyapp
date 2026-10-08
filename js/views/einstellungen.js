@@ -2,7 +2,7 @@ import { loadSettings, saveSettings } from '../settings.js';
 import { exportAll, importAll } from '../db.js';
 import { bulkImportCatalog } from '../catalog.js';
 import { migrateLegacyPhotosInDump } from '../attachments.js';
-import { buildBuchhaltungsCsv } from '../buchhaltung.js';
+import { buildBuchhaltungsXlsx } from '../buchhaltung.js';
 import { logout } from '../auth.js';
 import { escapeHtml } from '../utils.js';
 import { toast, confirmDialog } from '../ui.js';
@@ -219,12 +219,17 @@ export async function renderEinstellungen() {
     .map(y => `<option value="${y}">${y}</option>`).join('');
   main.querySelector('#btn-buchhaltung-export').addEventListener('click', async () => {
     const year = Number(jahrSelect.value);
-    const csv = await buildBuchhaltungsCsv(year);
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+    let blob;
+    try {
+      blob = await buildBuchhaltungsXlsx(year);
+    } catch (err) {
+      toast(err.message, 'error');
+      return;
+    }
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `buchhaltung-${year}.csv`;
+    a.download = `buchhaltung-${year}.xlsx`;
     a.click();
     URL.revokeObjectURL(url);
     toast(T.buchhaltungExportedToast, 'success');

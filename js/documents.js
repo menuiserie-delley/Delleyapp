@@ -55,6 +55,7 @@ export function newOfferte({ number, customerId, lang = 'de' }) {
     customerId: customerId || null,
     projekt: '',
     projektId: null,
+    mwstAktiv: true,
     datum: today,
     gueltigBis: '',
     lieferfrist: D.lieferfrist,
@@ -74,7 +75,9 @@ export function lineTotal(item) {
 
 export function computeTotals(doc, mwstSatz) {
   const subtotal = (doc.items || []).reduce((sum, it) => sum + lineTotal(it), 0);
-  const mwst = (subtotal * Number(mwstSatz)) / 100;
+  // doc.mwstAktiv === false schaltet die MwSt für dieses Dokument aus (alte Dokumente ohne
+  // das Feld bleiben unverändert mit MwSt).
+  const mwst = doc.mwstAktiv === false ? 0 : (subtotal * Number(mwstSatz)) / 100;
   return { subtotal, mwst, total: subtotal + mwst };
 }
 
